@@ -92,6 +92,10 @@ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;
 footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:28px 0;font-size:14px;color:var(--slate)}
 .fnav{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
 .fnav a{color:var(--slate)}
+#curSel{margin-left:14px;border:1.5px solid var(--line);background:#fff;border-radius:8px;
+padding:6px 8px;font:inherit;font-size:13.5px;font-weight:700;color:var(--navy);cursor:pointer}
+#curSel:hover{border-color:var(--em)}
+@media(max-width:760px){#curSel{margin-left:auto}}
 </style>
 </head>
 <body>
@@ -103,6 +107,7 @@ footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:
 <a href="/personal-loan-calculator/">Personal Loan</a>
 <a href="/about/">About</a>
 </nav>
+<select id="curSel" aria-label="Currency" onchange="setCur(this.value,true)"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="INR">INR</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="SGD">SGD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="PLN">PLN</option><option value="CZK">CZK</option><option value="RON">RON</option><option value="HUF">HUF</option><option value="ZAR">ZAR</option><option value="AED">AED</option><option value="JPY">JPY</option><option value="BRL">BRL</option><option value="MXN">MXN</option><option value="PHP">PHP</option><option value="MYR">MYR</option><option value="IDR">IDR</option><option value="NGN">NGN</option><option value="PKR">PKR</option><option value="BDT">BDT</option><option value="LKR">LKR</option><option value="KES">KES</option><option value="TRY">TRY</option><option value="THB">THB</option><option value="VND">VND</option></select>
 </div></header>
 
 <div class="wrap hero">
@@ -113,12 +118,12 @@ footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:
 <div class="calc">
   <div class="card"><div class="fields">
     <div class="f"><label for="amt">Vehicle price</label>
-      <div class="ip"><s>$</s><input id="amt" type="number" inputmode="decimal" value="35000" min="0" step="500"></div></div>
+      <div class="ip"><s class="cs">$</s><input id="amt" type="number" inputmode="decimal" value="35000" min="0" step="500"></div></div>
     <div class="two">
       <div class="f"><label for="down">Down payment / trade-in</label>
-        <div class="ip"><s>$</s><input id="down" type="number" inputmode="decimal" value="5000" min="0" step="500"></div></div>
+        <div class="ip"><s class="cs">$</s><input id="down" type="number" inputmode="decimal" value="5000" min="0" step="500"></div></div>
       <div class="f"><label for="fees">Fees rolled in</label>
-        <div class="ip"><s>$</s><input id="fees" type="number" inputmode="decimal" value="1200" min="0" step="100"></div></div>
+        <div class="ip"><s class="cs">$</s><input id="fees" type="number" inputmode="decimal" value="1200" min="0" step="100"></div></div>
     </div>
     <div class="two">
       <div class="f"><label for="rate">Interest rate <span class="hint">APR</span></label>
@@ -179,12 +184,83 @@ or an offer of credit. Confirm all figures with a licensed lender.</p>
 </div></footer>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://borrowcalc.com/"},{"@type":"ListItem","position":2,"name":"Auto Loan Calculator","item":"https://borrowcalc.com/auto-loan-calculator/"}]}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Auto Loan Calculator","url":"https://borrowcalc.com/auto-loan-calculator/","description":"Calculate monthly car payments and total interest.","applicationCategory":"FinanceApplication","operatingSystem":"Any (web browser)","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <script>
+var CUR={
+USD:{l:'en-US'},EUR:{l:'de-DE'},GBP:{l:'en-GB'},INR:{l:'en-IN'},
+CAD:{l:'en-CA'},AUD:{l:'en-AU'},NZD:{l:'en-NZ'},SGD:{l:'en-SG'},
+CHF:{l:'de-CH'},SEK:{l:'sv-SE'},NOK:{l:'nb-NO'},DKK:{l:'da-DK'},
+PLN:{l:'pl-PL'},CZK:{l:'cs-CZ'},RON:{l:'ro-RO'},HUF:{l:'hu-HU'},
+ZAR:{l:'en-ZA'},AED:{l:'ar-AE'},JPY:{l:'ja-JP'},BRL:{l:'pt-BR'},
+MXN:{l:'es-MX'},PHP:{l:'en-PH'},MYR:{l:'ms-MY'},IDR:{l:'id-ID'},
+NGN:{l:'en-NG'},PKR:{l:'en-PK'},BDT:{l:'bn-BD'},LKR:{l:'si-LK'},
+KES:{l:'en-KE'},TRY:{l:'tr-TR'},THB:{l:'th-TH'},VND:{l:'vi-VN'}};
+// Eurozone members share EUR; the rest of Europe keeps its own currency.
+var R2C={US:'USD',GB:'GBP',IN:'INR',CA:'CAD',AU:'AUD',NZ:'NZD',SG:'SGD',
+DE:'EUR',FR:'EUR',ES:'EUR',IT:'EUR',NL:'EUR',BE:'EUR',AT:'EUR',IE:'EUR',
+PT:'EUR',FI:'EUR',GR:'EUR',SK:'EUR',SI:'EUR',EE:'EUR',LV:'EUR',LT:'EUR',
+LU:'EUR',CY:'EUR',MT:'EUR',HR:'EUR',
+CH:'CHF',SE:'SEK',NO:'NOK',DK:'DKK',PL:'PLN',CZ:'CZK',RO:'RON',HU:'HUF',
+ZA:'ZAR',AE:'AED',JP:'JPY',BR:'BRL',MX:'MXN',PH:'PHP',MY:'MYR',ID:'IDR',
+NG:'NGN',PK:'PKR',BD:'BDT',LK:'LKR',KE:'KES',TR:'TRY',TH:'THB',VN:'VND'};
+var CURRENT='USD',_nf0=null,_nf2=null;
+function region(){
+  try{
+    var r=new Intl.Locale(navigator.language).region;
+    if(r)return r;
+  }catch(e){}
+  var p=(navigator.language||'').split('-');
+  return p.length>1?p[p.length-1].toUpperCase():'';
+}
+function saved(){
+  try{var s=localStorage.getItem('bc_cur');return (s&&CUR[s])?s:null;}catch(e){return null;}
+}
+// Tier 1 (instant): an explicit past choice, else a guess from browser language.
+// Language is only a proxy for country, so this is provisional - geoRefine()
+// corrects it a moment later.
+function detectCur(){
+  return saved()||R2C[region()]||'USD';
+}
+// Tier 2 (accurate): Cloudflare serves /cdn-cgi/trace on this zone and reports
+// the visitor's real country in ~236 bytes. Same-origin, so no CORS and no
+// third party learns anything. Fired after first paint, so it never delays
+// rendering. An explicit user choice always wins and is never overwritten.
+function geoRefine(){
+  if(saved())return;
+  try{
+    fetch('/cdn-cgi/trace',{cache:'no-store'}).then(function(r){return r.text();})
+    .then(function(t){
+      var m=/loc=([A-Z]{2})/.exec(t);
+      var c=m&&R2C[m[1]];
+      if(c&&c!==CURRENT)setCur(c,false);
+    }).catch(function(){});
+  }catch(e){}
+}
+// Formatters are cached: building an Intl.NumberFormat is expensive and the
+// amortisation table calls these hundreds of times per render.
+// persist=false for auto-detection, so a traveller's currency follows them
+// instead of being frozen by a guess they never made.
+function setCur(c,persist){
+  if(!CUR[c])c='USD';
+  CURRENT=c;
+  var L=CUR[c].l;
+  _nf0=new Intl.NumberFormat(L,{style:'currency',currency:c,maximumFractionDigits:0});
+  _nf2=new Intl.NumberFormat(L,{style:'currency',currency:c,minimumFractionDigits:2,maximumFractionDigits:2});
+  if(persist!==false){try{localStorage.setItem('bc_cur',c);}catch(e){}}
+  // Input prefixes carry the symbol too, so pull it from the formatter rather
+  // than hard-coding a symbol table that would drift.
+  var sym=_nf0.formatToParts(1).find(function(p){return p.type==='currency';});
+  sym=sym?sym.value:c;
+  var els=document.getElementsByClassName('cs');
+  for(var i=0;i<els.length;i++)els[i].textContent=sym;
+  var sel=document.getElementById('curSel');
+  if(sel&&sel.value!==c)sel.value=c;
+  if(typeof calc==='function')calc();
+}
+function money(v){if(!isFinite(v))v=0;return _nf0.format(Math.round(v));}
+function money2(v){if(!isFinite(v))v=0;return _nf2.format(v);}
+
+
 function pmt(P,r,n){if(!(P>0)||!(n>0))return 0;if(r===0)return P/n;
 var g=Math.pow(1+r,n);return P*r*g/(g-1);}
-function money(v){if(!isFinite(v))v=0;
-return '$'+Math.round(v).toLocaleString('en-US');}
-function money2(v){if(!isFinite(v))v=0;
-return '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function num(id){var e=document.getElementById(id);if(!e)return 0;
 var v=parseFloat(String(e.value).replace(/[^0-9.\-]/g,''));return isFinite(v)?v:0;}
 // Build the full month-by-month schedule. Interest is charged on the balance
@@ -230,6 +306,7 @@ function calc(){
 }
 document.addEventListener('input',function(e){if(e.target.closest('.fields'))calc();});
 calc();
-</script>
+
+setCur(detectCur(),false);geoRefine();</script>
 </body>
 </html>

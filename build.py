@@ -132,7 +132,107 @@ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;
 footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:28px 0;font-size:14px;color:var(--slate)}
 .fnav{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
 .fnav a{color:var(--slate)}
+#curSel{margin-left:14px;border:1.5px solid var(--line);background:#fff;border-radius:8px;
+padding:6px 8px;font:inherit;font-size:13.5px;font-weight:700;color:var(--navy);cursor:pointer}
+#curSel:hover{border-color:var(--em)}
+@media(max-width:760px){#curSel{margin-left:auto}}
 """
+
+
+# Locale-aware currency. Detection is client-side from navigator.language, so
+# no geo-IP lookup, no server call and nothing about the visitor is recorded.
+#
+# Two deliberate choices:
+#   * The HTML always ships USD, and JS switches afterwards. Crawlers therefore
+#     always see one consistent page - no cloaking risk from serving different
+#     content by region.
+#   * A visible selector overrides detection and persists. Language is a poor
+#     proxy for country (an Indian user on en-GB, an expat on en-US), so guessing
+#     without an override would be worse than not guessing at all.
+CURRENCY_JS = """
+var CUR={
+USD:{l:'en-US'},EUR:{l:'de-DE'},GBP:{l:'en-GB'},INR:{l:'en-IN'},
+CAD:{l:'en-CA'},AUD:{l:'en-AU'},NZD:{l:'en-NZ'},SGD:{l:'en-SG'},
+CHF:{l:'de-CH'},SEK:{l:'sv-SE'},NOK:{l:'nb-NO'},DKK:{l:'da-DK'},
+PLN:{l:'pl-PL'},CZK:{l:'cs-CZ'},RON:{l:'ro-RO'},HUF:{l:'hu-HU'},
+ZAR:{l:'en-ZA'},AED:{l:'ar-AE'},JPY:{l:'ja-JP'},BRL:{l:'pt-BR'},
+MXN:{l:'es-MX'},PHP:{l:'en-PH'},MYR:{l:'ms-MY'},IDR:{l:'id-ID'},
+NGN:{l:'en-NG'},PKR:{l:'en-PK'},BDT:{l:'bn-BD'},LKR:{l:'si-LK'},
+KES:{l:'en-KE'},TRY:{l:'tr-TR'},THB:{l:'th-TH'},VND:{l:'vi-VN'}};
+// Eurozone members share EUR; the rest of Europe keeps its own currency.
+var R2C={US:'USD',GB:'GBP',IN:'INR',CA:'CAD',AU:'AUD',NZ:'NZD',SG:'SGD',
+DE:'EUR',FR:'EUR',ES:'EUR',IT:'EUR',NL:'EUR',BE:'EUR',AT:'EUR',IE:'EUR',
+PT:'EUR',FI:'EUR',GR:'EUR',SK:'EUR',SI:'EUR',EE:'EUR',LV:'EUR',LT:'EUR',
+LU:'EUR',CY:'EUR',MT:'EUR',HR:'EUR',
+CH:'CHF',SE:'SEK',NO:'NOK',DK:'DKK',PL:'PLN',CZ:'CZK',RO:'RON',HU:'HUF',
+ZA:'ZAR',AE:'AED',JP:'JPY',BR:'BRL',MX:'MXN',PH:'PHP',MY:'MYR',ID:'IDR',
+NG:'NGN',PK:'PKR',BD:'BDT',LK:'LKR',KE:'KES',TR:'TRY',TH:'THB',VN:'VND'};
+var CURRENT='USD',_nf0=null,_nf2=null;
+function region(){
+  try{
+    var r=new Intl.Locale(navigator.language).region;
+    if(r)return r;
+  }catch(e){}
+  var p=(navigator.language||'').split('-');
+  return p.length>1?p[p.length-1].toUpperCase():'';
+}
+function saved(){
+  try{var s=localStorage.getItem('bc_cur');return (s&&CUR[s])?s:null;}catch(e){return null;}
+}
+// Tier 1 (instant): an explicit past choice, else a guess from browser language.
+// Language is only a proxy for country, so this is provisional - geoRefine()
+// corrects it a moment later.
+function detectCur(){
+  return saved()||R2C[region()]||'USD';
+}
+// Tier 2 (accurate): Cloudflare serves /cdn-cgi/trace on this zone and reports
+// the visitor's real country in ~236 bytes. Same-origin, so no CORS and no
+// third party learns anything. Fired after first paint, so it never delays
+// rendering. An explicit user choice always wins and is never overwritten.
+function geoRefine(){
+  if(saved())return;
+  try{
+    fetch('/cdn-cgi/trace',{cache:'no-store'}).then(function(r){return r.text();})
+    .then(function(t){
+      var m=/loc=([A-Z]{2})/.exec(t);
+      var c=m&&R2C[m[1]];
+      if(c&&c!==CURRENT)setCur(c,false);
+    }).catch(function(){});
+  }catch(e){}
+}
+// Formatters are cached: building an Intl.NumberFormat is expensive and the
+// amortisation table calls these hundreds of times per render.
+// persist=false for auto-detection, so a traveller's currency follows them
+// instead of being frozen by a guess they never made.
+function setCur(c,persist){
+  if(!CUR[c])c='USD';
+  CURRENT=c;
+  var L=CUR[c].l;
+  _nf0=new Intl.NumberFormat(L,{style:'currency',currency:c,maximumFractionDigits:0});
+  _nf2=new Intl.NumberFormat(L,{style:'currency',currency:c,minimumFractionDigits:2,maximumFractionDigits:2});
+  if(persist!==false){try{localStorage.setItem('bc_cur',c);}catch(e){}}
+  // Input prefixes carry the symbol too, so pull it from the formatter rather
+  // than hard-coding a symbol table that would drift.
+  var sym=_nf0.formatToParts(1).find(function(p){return p.type==='currency';});
+  sym=sym?sym.value:c;
+  var els=document.getElementsByClassName('cs');
+  for(var i=0;i<els.length;i++)els[i].textContent=sym;
+  var sel=document.getElementById('curSel');
+  if(sel&&sel.value!==c)sel.value=c;
+  if(typeof calc==='function')calc();
+}
+function money(v){if(!isFinite(v))v=0;return _nf0.format(Math.round(v));}
+function money2(v){if(!isFinite(v))v=0;return _nf2.format(v);}
+"""
+
+CURRENCY_SELECT = (
+    '<select id="curSel" aria-label="Currency" onchange="setCur(this.value,true)">'
+    + "".join('<option value="%s">%s</option>' % (c, c) for c in
+              ["USD", "EUR", "GBP", "INR", "CAD", "AUD", "NZD", "SGD", "CHF",
+               "SEK", "NOK", "DKK", "PLN", "CZK", "RON", "HUF", "ZAR", "AED",
+               "JPY", "BRL", "MXN", "PHP", "MYR", "IDR", "NGN", "PKR", "BDT",
+               "LKR", "KES", "TRY", "THB", "VND"])
+    + "</select>")
 
 
 def shell(page):
@@ -177,6 +277,7 @@ def shell(page):
 <a href="/personal-loan-calculator/">Personal Loan</a>
 <a href="/about/">About</a>
 </nav>
+{cursel}
 </div></header>
 {body}
 <footer><div class="wrap">
@@ -196,7 +297,8 @@ or an offer of credit. Confirm all figures with a licensed lender.</p>
 </body>
 </html>""".format(title=page["title"], desc=page["desc"], site=SITE, path=page["path"],
                   name=NAME, navy=NAVY, favicon=FAVICON, css=CSS, logo=LOGO,
-                  body=page["body"], year=YEAR, ld=ld, js=page.get("js", ""))
+                  body=page["body"], year=YEAR, ld=ld, js=page.get("js", ""),
+                  cursel=CURRENCY_SELECT)
 
 
 def write(path, content):

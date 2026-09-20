@@ -11,6 +11,13 @@ import pages
 SITE = build.SITE
 TODAY = datetime.date.today().isoformat()
 
+
+def JS(calc_js):
+    """Currency module first, then the page's calculator, then kick off
+    detection. Order matters: setCur() defines money()/money2(), which the
+    calculator calls on its initial render."""
+    return "<script>%s\n%s\nsetCur(detectCur(),false);geoRefine();</script>" % (build.CURRENCY_JS, calc_js)
+
 # ------------------------------------------------------ generic loan page ----
 # Auto and personal loans are the same maths as a mortgage minus the escrow
 # items, so one template drives both. Adding "student loan" or "credit card
@@ -57,12 +64,12 @@ def simple_body(cfg):
 <div class="calc">
   <div class="card"><div class="fields">
     <div class="f"><label for="amt">{amt_label}</label>
-      <div class="ip"><s>$</s><input id="amt" type="number" inputmode="decimal" value="{amt}" min="0" step="500"></div></div>
+      <div class="ip"><s class="cs">$</s><input id="amt" type="number" inputmode="decimal" value="{amt}" min="0" step="500"></div></div>
     <div class="two">
       <div class="f"><label for="down">Down payment / trade-in</label>
-        <div class="ip"><s>$</s><input id="down" type="number" inputmode="decimal" value="{down}" min="0" step="500"></div></div>
+        <div class="ip"><s class="cs">$</s><input id="down" type="number" inputmode="decimal" value="{down}" min="0" step="500"></div></div>
       <div class="f"><label for="fees">Fees rolled in</label>
-        <div class="ip"><s>$</s><input id="fees" type="number" inputmode="decimal" value="{fees}" min="0" step="100"></div></div>
+        <div class="ip"><s class="cs">$</s><input id="fees" type="number" inputmode="decimal" value="{fees}" min="0" step="100"></div></div>
     </div>
     <div class="two">
       <div class="f"><label for="rate">Interest rate <span class="hint">APR</span></label>
@@ -147,7 +154,7 @@ PAGES.append({
     "desc": "Free mortgage calculator with property tax, home insurance, PMI and HOA. "
             "See your full monthly payment, total interest and a year-by-year amortisation schedule.",
     "body": pages.MORTGAGE_BODY,
-    "js": "<script>%s</script>" % pages.MORTGAGE_JS,
+    "js": JS(pages.MORTGAGE_JS),
     "schema": [calc_schema("Mortgage Calculator",
                            "Calculate a full monthly mortgage payment including principal, "
                            "interest, property tax, insurance and PMI.",
@@ -190,7 +197,7 @@ PAGES.append({
         ]),
         "tiles": tiles("/auto-loan-calculator/"),
     }),
-    "js": "<script>%s</script>" % SIMPLE_JS,
+    "js": JS(SIMPLE_JS),
     "schema": [calc_schema("Auto Loan Calculator",
                            "Calculate monthly car payments and total interest.",
                            "/auto-loan-calculator/")],
@@ -232,7 +239,7 @@ PAGES.append({
         ]),
         "tiles": tiles("/personal-loan-calculator/"),
     }),
-    "js": "<script>%s</script>" % SIMPLE_JS,
+    "js": JS(SIMPLE_JS),
     "schema": [calc_schema("Personal Loan Calculator",
                            "Calculate personal loan repayments and total interest.",
                            "/personal-loan-calculator/")],

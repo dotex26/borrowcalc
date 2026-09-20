@@ -92,6 +92,10 @@ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;
 footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:28px 0;font-size:14px;color:var(--slate)}
 .fnav{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
 .fnav a{color:var(--slate)}
+#curSel{margin-left:14px;border:1.5px solid var(--line);background:#fff;border-radius:8px;
+padding:6px 8px;font:inherit;font-size:13.5px;font-weight:700;color:var(--navy);cursor:pointer}
+#curSel:hover{border-color:var(--em)}
+@media(max-width:760px){#curSel{margin-left:auto}}
 </style>
 </head>
 <body>
@@ -103,6 +107,7 @@ footer{background:#fff;border-top:1px solid var(--line);margin-top:34px;padding:
 <a href="/personal-loan-calculator/">Personal Loan</a>
 <a href="/about/">About</a>
 </nav>
+<select id="curSel" aria-label="Currency" onchange="setCur(this.value,true)"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="INR">INR</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="SGD">SGD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="PLN">PLN</option><option value="CZK">CZK</option><option value="RON">RON</option><option value="HUF">HUF</option><option value="ZAR">ZAR</option><option value="AED">AED</option><option value="JPY">JPY</option><option value="BRL">BRL</option><option value="MXN">MXN</option><option value="PHP">PHP</option><option value="MYR">MYR</option><option value="IDR">IDR</option><option value="NGN">NGN</option><option value="PKR">PKR</option><option value="BDT">BDT</option><option value="LKR">LKR</option><option value="KES">KES</option><option value="TRY">TRY</option><option value="THB">THB</option><option value="VND">VND</option></select>
 </div></header>
 
 <div class="wrap hero">

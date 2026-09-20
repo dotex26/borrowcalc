@@ -22,10 +22,6 @@ nobody's salary or loan balance is ever transmitted anywhere.
 ENGINE = """
 function pmt(P,r,n){if(!(P>0)||!(n>0))return 0;if(r===0)return P/n;
 var g=Math.pow(1+r,n);return P*r*g/(g-1);}
-function money(v){if(!isFinite(v))v=0;
-return '$'+Math.round(v).toLocaleString('en-US');}
-function money2(v){if(!isFinite(v))v=0;
-return '$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function num(id){var e=document.getElementById(id);if(!e)return 0;
 var v=parseFloat(String(e.value).replace(/[^0-9.\\-]/g,''));return isFinite(v)?v:0;}
 // Build the full month-by-month schedule. Interest is charged on the balance
@@ -121,7 +117,7 @@ insurance, PMI and HOA - and see exactly how much interest you pay over the life
   <div class="card">
     <div class="fields">
       <div class="f"><label for="price">Home price</label>
-        <div class="ip"><s>$</s><input id="price" type="number" inputmode="decimal" value="400000" min="0" step="1000"></div></div>
+        <div class="ip"><s class="cs">$</s><input id="price" type="number" inputmode="decimal" value="400000" min="0" step="1000"></div></div>
       <div class="two">
         <div class="f"><label for="dppct">Down payment <span class="hint">%</span></label>
           <div class="ip"><input id="dppct" type="number" inputmode="decimal" value="20" min="0" max="100" step="0.5"><s>%</s></div></div>
@@ -134,13 +130,13 @@ insurance, PMI and HOA - and see exactly how much interest you pay over the life
         <div class="f"><label for="tax">Property tax <span class="hint">% / year</span></label>
           <div class="ip"><input id="tax" type="number" inputmode="decimal" value="1.1" min="0" step="0.01"><s>%</s></div></div>
         <div class="f"><label for="ins">Home insurance <span class="hint">$ / year</span></label>
-          <div class="ip"><s>$</s><input id="ins" type="number" inputmode="decimal" value="1800" min="0" step="50"></div></div>
+          <div class="ip"><s class="cs">$</s><input id="ins" type="number" inputmode="decimal" value="1800" min="0" step="50"></div></div>
       </div>
       <div class="two">
         <div class="f"><label for="pmi">PMI <span class="hint">% / year</span></label>
           <div class="ip"><input id="pmi" type="number" inputmode="decimal" value="0.5" min="0" step="0.05"><s>%</s></div></div>
         <div class="f"><label for="hoa">HOA <span class="hint">$ / month</span></label>
-          <div class="ip"><s>$</s><input id="hoa" type="number" inputmode="decimal" value="0" min="0" step="10"></div></div>
+          <div class="ip"><s class="cs">$</s><input id="hoa" type="number" inputmode="decimal" value="0" min="0" step="10"></div></div>
       </div>
     </div>
   </div>
