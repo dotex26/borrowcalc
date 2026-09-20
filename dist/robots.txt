@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# AI search crawlers - allowed: these control citability in AI answers.
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://borrowcalc.com/sitemap.xml

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Logo drafts from image generation (~3MB). The SVGs in assets/ are what the
+# site actually uses; these are kept locally for reference only.
+assets/*.png
