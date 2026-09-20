@@ -255,6 +255,7 @@ def shell(page):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="google-site-verification" content="Ux7XK1huB-74IoWyN7zWsyXgrCFENtTIYK48-Qed2GA">
 <title>{title}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{site}{path}">
