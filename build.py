@@ -266,7 +266,9 @@ def shell(page):
 <meta property="og:site_name" content="{name}">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="{navy}">
-<link rel="icon" href="{favicon}">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>{css}</style>
 </head>
 <body>
@@ -297,7 +299,7 @@ or an offer of credit. Confirm all figures with a licensed lender.</p>
 {js}
 </body>
 </html>""".format(title=page["title"], desc=page["desc"], site=SITE, path=page["path"],
-                  name=NAME, navy=NAVY, favicon=FAVICON, css=CSS, logo=LOGO,
+                  name=NAME, navy=NAVY, css=CSS, logo=LOGO,
                   body=page["body"], year=YEAR, ld=ld, js=page.get("js", ""),
                   cursel=CURRENCY_SELECT)
 

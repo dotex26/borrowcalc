@@ -7,6 +7,7 @@ import os
 import datetime
 import build
 import pages
+import icons
 
 SITE = build.SITE
 TODAY = datetime.date.today().isoformat()
@@ -433,6 +434,11 @@ Sitemap: %s/sitemap.xml
     logo_svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
                 + build.LOGO.split(">", 1)[1])
     total += build.write_raw("logo.svg", logo_svg)
+
+    # Real icon files. Browsers probe /favicon.ico directly regardless of
+    # the <link> tag, and a 404 there is why Chrome shows a generic globe.
+    for _name, _sz in icons.generate(build.OUT):
+        total += _sz
 
     print("\n  robots.txt, sitemap.xml, logo.svg")
     print("\n  %d pages, %.1f KB total" % (len(PAGES), total / 1024.0))
